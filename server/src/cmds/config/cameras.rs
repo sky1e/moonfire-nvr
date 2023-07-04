@@ -570,6 +570,16 @@ fn edit_camera_dialog(db: &Arc<db::Database>, siv: &mut Cursive, item: &Option<i
         .child("password", views::EditView::new().with_name("password"))
         .min_height(6);
     let mut layout = views::LinearLayout::vertical()
+        .child(views::LinearLayout::horizontal().child({
+            let mut button = views::Button::new("Copy existing camera config", {
+                let db = db.clone();
+                move |s| copy_camera_dialog(s, &db)
+            });
+            if db.lock().cameras_by_id().is_empty() {
+                button.disable();
+            }
+            button
+        }))
         .child(camera_list)
         .child(views::TextView::new("description"))
         .child(
@@ -661,16 +671,10 @@ fn edit_camera_dialog(db: &Arc<db::Database>, siv: &mut Cursive, item: &Option<i
                 |v: &mut views::TextView| v.set_content("<new>"),
             );
         }
-        dialog
-            .title("Add camera")
-            .button("Add", {
-                let db = db.clone();
-                move |s| press_edit(s, &db, None)
-            })
-            .button("Copy config", {
-                let db = db.clone();
-                move |s| copy_camera_dialog(s, &db)
-            })
+        dialog.title("Add camera").button("Add", {
+            let db = db.clone();
+            move |s| press_edit(s, &db, None)
+        })
     };
     siv.add_layer(dialog.dismiss_button("Cancel"));
 }
